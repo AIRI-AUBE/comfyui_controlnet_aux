@@ -18,7 +18,6 @@ from typing import Callable, List, NamedTuple, Tuple, Union
 import cv2
 import numpy as np
 import torch
-from huggingface_hub import hf_hub_download
 from PIL import Image
 
 from custom_controlnet_aux.util import HWC3, common_input_validate, resize_image_with_pad, custom_hf_download, HF_MODEL_NAME

@@ -17,7 +17,6 @@ from .body import Body, BodyResult, Keypoint
 from .hand import Hand
 from .face import Face
 from .types import PoseResult, HandResult, FaceResult, AnimalPoseResult
-from huggingface_hub import hf_hub_download
 from .wholebody import Wholebody
 import warnings
 from custom_controlnet_aux.util import HWC3, resize_image_with_pad, common_input_validate, custom_hf_download

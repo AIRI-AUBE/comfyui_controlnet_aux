@@ -1,6 +1,5 @@
 torch
 importlib_metadata
-huggingface_hub
 scipy
 opencv-python>=4.7.0.72
 filelock

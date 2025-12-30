@@ -4,7 +4,6 @@ import torch
 import os
 import cv2
 from custom_controlnet_aux.util import HWC3, resize_image_with_pad, common_input_validate, custom_hf_download, BDS_MODEL_NAME
-from huggingface_hub import hf_hub_download
 from PIL import Image
 from einops import rearrange
 from .anime_segmentation import AnimeSegmentation

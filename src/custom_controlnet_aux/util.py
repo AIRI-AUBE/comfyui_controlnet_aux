@@ -8,7 +8,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 import torch
-from huggingface_hub import constants, hf_hub_download
 from torch.utils.model_zoo import load_url
 from ast import literal_eval
 
@@ -263,10 +262,8 @@ def check_hash_from_torch_hub(file_path, filename):
     return curr_hash[:len(ref_hash)] == ref_hash
 
 def custom_torch_download(filename, ckpts_dir=annotator_ckpts_path):
-    """Download PyTorch models using PyTorch 2.7's built-in download mechanism."""
-    model_url = "https://download.pytorch.org/models/" + filename
-    
-    # Use PyTorch's built-in model downloading with custom cache directory
+    """Resolve PyTorch model files locally (downloads disabled)."""
+
     local_dir = os.path.join(ckpts_dir, "torch")
     if not os.path.exists(local_dir):
         os.makedirs(local_dir, exist_ok=True)
@@ -274,77 +271,32 @@ def custom_torch_download(filename, ckpts_dir=annotator_ckpts_path):
     model_path = os.path.join(local_dir, filename)
     
     if not os.path.exists(model_path):
-        print(f"Downloading {filename} from pytorch.org...")
-        try:
-            # Use PyTorch 2.7's load_url which handles caching, progress, and hash checking
-            state_dict = load_url(model_url, model_dir=local_dir, file_name=filename, progress=True, check_hash=True)
-            # The file is already saved by load_url, we just need the path
-        except Exception as e:
-            warnings.warn(f"Download failed with error: {e}")
-            raise
+        raise FileNotFoundError(
+            "PyTorch model downloads are disabled. "
+            f"Place the model file locally at: {model_path} (ckpts_dir={ckpts_dir}, filename={filename})."
+        )
     
     print(f"model_path is {model_path}")
     return model_path
 
 def custom_hf_download(pretrained_model_or_path, filename, cache_dir=temp_dir, ckpts_dir=annotator_ckpts_path, subfolder='', use_symlinks=USE_SYMLINKS, repo_type="model"):
 
+    # Local-only resolver: never downloads or contacts Hugging Face.
+    # We keep the same signature for compatibility with existing detectors.
     local_dir = os.path.join(ckpts_dir, pretrained_model_or_path)
-    model_path = Path(local_dir).joinpath(*subfolder.split('/'), filename).__str__()
+    model_path = Path(local_dir).joinpath(*subfolder.split('/'), filename)
 
     if len(str(model_path)) >= 255:
         warnings.warn(f"Path {model_path} is too long, \n please change annotator_ckpts_path in config.yaml")
 
-    if not os.path.exists(model_path):
-        print(f"Failed to find {model_path}.\n Downloading from huggingface.co")
-        print(f"cacher folder is {cache_dir}, you can change it by custom_tmp_path in config.yaml")
-        if use_symlinks:
-            cache_dir_d = constants.HF_HUB_CACHE    # use huggingface newer env variables `HF_HUB_CACHE`
-            if cache_dir_d is None:
-                import platform
-                if platform.system() == "Windows":
-                    cache_dir_d = Path(os.getenv("USERPROFILE")).joinpath(".cache", "huggingface", "hub").__str__()
-                else:
-                    cache_dir_d = os.path.join(os.getenv("HOME"), ".cache", "huggingface", "hub")
-            try:
-                # test_link
-                Path(cache_dir_d).mkdir(parents=True, exist_ok=True)
-                Path(ckpts_dir).mkdir(parents=True, exist_ok=True)
-                (Path(cache_dir_d) / f"linktest_{filename}.txt").touch()
-                # symlink instead of link avoid `invalid cross-device link` error.
-                os.symlink(os.path.join(cache_dir_d, f"linktest_{filename}.txt"), os.path.join(ckpts_dir, f"linktest_{filename}.txt"))
-                print("Using symlinks to download models. \n",\
-                      "Make sure you have enough space on your cache folder. \n",\
-                      "And do not purge the cache folder after downloading.\n",\
-                      "Otherwise, you will have to re-download the models every time you run the script.\n",\
-                      "You can use USE_SYMLINKS: False in config.yaml to avoid this behavior.")
-            except:
-                print("Maybe not able to create symlink. Disable using symlinks.")
-                use_symlinks = False
-                cache_dir_d = Path(cache_dir).joinpath("ckpts", pretrained_model_or_path).__str__()
-            finally:    # always remove test link files
-                with suppress(FileNotFoundError):
-                    os.remove(os.path.join(ckpts_dir, f"linktest_{filename}.txt"))
-                    os.remove(os.path.join(cache_dir_d, f"linktest_{filename}.txt"))
-        else:
-            cache_dir_d = os.path.join(cache_dir, "ckpts", pretrained_model_or_path)
-
-        model_path = hf_hub_download(repo_id=pretrained_model_or_path,
-            cache_dir=cache_dir_d,
-            local_dir=local_dir,
-            subfolder=subfolder,
-            filename=filename,
-            local_dir_use_symlinks=use_symlinks,
-            resume_download=True,
-            etag_timeout=100,
-            repo_type=repo_type
+    if not model_path.exists():
+        raise FileNotFoundError(
+            "Hugging Face downloads are disabled. "
+            f"Place the model file locally at: {model_path} "
+            f"(ckpts_dir={ckpts_dir}, repo_id={pretrained_model_or_path}, subfolder={subfolder or '(none)'}, filename={filename}). "
+            "You can change the base folder via the AUX_ANNOTATOR_CKPTS_PATH environment variable."
         )
-        if not use_symlinks:
-            try:
-                import shutil
-                shutil.rmtree(os.path.join(cache_dir, "ckpts"))
-            except Exception as e :
-                print(e)
 
-    print(f"model_path is {model_path}")
-
-    return model_path
+    model_path_str = model_path.__str__()
+    print(f"model_path is {model_path_str}")
+    return model_path_str

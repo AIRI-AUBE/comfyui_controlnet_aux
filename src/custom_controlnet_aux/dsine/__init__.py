@@ -9,7 +9,8 @@ import torch
 import torchvision.transforms as transforms
 from einops import rearrange
 from PIL import Image
-from huggingface_hub import hf_hub_download
+
+from custom_controlnet_aux.util import custom_hf_download
 
 from .models.dsine_arch import DSINE
 from .utils.utils import get_intrins_from_fov
@@ -94,24 +95,7 @@ def common_input_validate(input_image, output_type, **kwargs):
     
     return (input_image, output_type)
 
-def custom_hf_download(pretrained_model_or_path, filename, subfolder=''):
-    """Download model files from HuggingFace Hub"""
-    annotator_ckpts_path = os.path.join(Path(__file__).parents[3], 'ckpts')
-    local_dir = os.path.join(annotator_ckpts_path, pretrained_model_or_path)
-    model_path = Path(local_dir).joinpath(*subfolder.split('/'), filename).__str__()
 
-    if not os.path.exists(model_path):
-        print(f"Downloading {filename} from {pretrained_model_or_path}")
-        model_path = hf_hub_download(
-            repo_id=pretrained_model_or_path,
-            filename=filename,
-            subfolder=subfolder,
-            local_dir=local_dir,
-            local_dir_use_symlinks=False
-        )
-    
-    print(f"model_path is {model_path}")
-    return model_path
 
 # load model
 def load_checkpoint(fpath, model):
