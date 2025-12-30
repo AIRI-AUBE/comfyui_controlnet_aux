@@ -24,7 +24,7 @@ class TileDetector:
         return detected_map
 
 
-# Source: https://huggingface.co/TTPlanet/TTPLanet_SDXL_Controlnet_Tile_Realistic/blob/main/TTP_tile_preprocessor_v5.py
+# Source: TTPlanet/TTPLanet_SDXL_Controlnet_Tile_Realistic (upstream)
 
 def apply_gaussian_blur(image_np, ksize=5, sigmaX=1.0):
     if ksize % 2 == 0:

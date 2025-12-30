@@ -3,19 +3,35 @@ Modern DepthAnything implementation using HuggingFace transformers.
 Replaces legacy torch.hub.load DINOv2 backbone with transformers pipeline.
 """
 
+import os
+
 import numpy as np
 import torch
 from PIL import Image
-from transformers import pipeline
+from transformers import AutoImageProcessor, AutoModelForDepthEstimation
 
 from custom_controlnet_aux.util import HWC3, common_input_validate, resize_image_with_pad
+
+
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 
 class DepthAnythingDetector:
     """DepthAnything depth estimation using HuggingFace transformers."""
     
     def __init__(self, model_name="LiheYoung/depth-anything-large-hf"):
         """Initialize DepthAnything with specified model."""
-        self.pipe = pipeline(task="depth-estimation", model=model_name)
+        self.model_name = model_name
+        try:
+            self.processor = AutoImageProcessor.from_pretrained(model_name, local_files_only=True)
+            self.model = AutoModelForDepthEstimation.from_pretrained(model_name, local_files_only=True)
+        except Exception as e:
+            raise FileNotFoundError(
+                "DepthAnything is configured for offline/local-only use. "
+                f"Transformers assets for '{model_name}' were not found locally. "
+                f"Original error: {type(e).__name__}: {e}"
+            ) from e
         self.device = "cpu"
 
     @classmethod  
@@ -34,7 +50,7 @@ class DepthAnythingDetector:
     
     def to(self, device):
         """Move model to specified device."""
-        self.pipe.model = self.pipe.model.to(device) 
+        self.model = self.model.to(device)
         self.device = device
         return self
         
@@ -47,25 +63,33 @@ class DepthAnythingDetector:
             pil_image = Image.fromarray(input_image)
         else:
             pil_image = input_image
-        
+
         with torch.no_grad():
-            result = self.pipe(pil_image)
-            depth = result["depth"]
-            
-            if isinstance(depth, Image.Image):
-                depth_array = np.array(depth, dtype=np.float32)
-            else:
-                depth_array = np.array(depth)
-                
-            # Normalize depth values to 0-255 range
-            depth_min = depth_array.min()
-            depth_max = depth_array.max()
+            inputs = self.processor(images=pil_image, return_tensors="pt")
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}
+            outputs = self.model(**inputs)
+
+            predicted_depth = getattr(outputs, "predicted_depth", None)
+            if predicted_depth is None:
+                raise RuntimeError("DepthAnything model did not return predicted_depth")
+
+            depth = torch.nn.functional.interpolate(
+                predicted_depth.unsqueeze(1),
+                size=pil_image.size[::-1],
+                mode="bicubic",
+                align_corners=False,
+            ).squeeze()
+
+            depth_array = depth.detach().float().cpu().numpy()
+
+            depth_min = float(depth_array.min())
+            depth_max = float(depth_array.max())
             if depth_max > depth_min:
                 depth_array = (depth_array - depth_min) / (depth_max - depth_min) * 255.0
             else:
                 depth_array = np.zeros_like(depth_array)
-                
-            depth_image = depth_array.astype(np.uint8)
+
+            depth_image = depth_array.clip(0, 255).astype(np.uint8)
 
         detected_map = remove_pad(HWC3(depth_image))
         

@@ -1,5 +1,5 @@
 #https://github.com/SkyTNT/anime-segmentation/tree/main
-#Only adapt isnet_is (https://huggingface.co/skytnt/anime-seg/blob/main/isnetis.ckpt)
+# Only adapt isnet_is (skytnt/anime-seg, upstream)
 import torch.nn as nn
 import torch
 from .isnet import ISNetDIS

@@ -4,6 +4,11 @@ import gc
 import numpy as np
 from custom_controlnet_aux.mesh_graphormer.depth_preprocessor import Preprocessor
 
+# Hard-disable Hugging Face / Transformers network access (local-only mode).
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
+
 import torchvision.models as models
 from custom_mesh_graphormer.modeling.bert import BertConfig, Graphormer
 from custom_mesh_graphormer.modeling.bert import Graphormer_Hand_Network as Graphormer_Network
@@ -100,8 +105,11 @@ class MeshGraphormerMediapipe(Preprocessor):
             # init three transformer-encoder blocks in a loop
             for i in range(len(output_feat_dim)):
                 config_class, model_class = BertConfig, Graphormer
-                config = config_class.from_pretrained(args.config_name if args.config_name \
-                        else args.model_name_or_path, attn_implementation="eager")
+                config = config_class.from_pretrained(
+                    args.config_name if args.config_name else args.model_name_or_path,
+                    attn_implementation="eager",
+                    local_files_only=True,
+                )
 
                 config.output_attentions = False
                 config.img_feature_dim = input_feat_dim[i] 

@@ -3,10 +3,16 @@ ZoeDepth implementation using HuggingFace transformers.
 Uses official Intel models for depth estimation.
 """
 
+import os
+
 import numpy as np
 import torch
 from PIL import Image
-from transformers import pipeline, AutoImageProcessor, ZoeDepthForDepthEstimation
+from transformers import AutoImageProcessor, ZoeDepthForDepthEstimation
+
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 
 # Local utility functions
 def HWC3(x):
@@ -92,7 +98,16 @@ class ZoeDetector:
     
     def __init__(self, model_name="Intel/zoedepth-nyu-kitti"):
         """Initialize ZoeDepth with specified model."""
-        self.pipe = pipeline(task="depth-estimation", model=model_name)
+        self.model_name = model_name
+        try:
+            self.processor = AutoImageProcessor.from_pretrained(model_name, local_files_only=True)
+            self.model = ZoeDepthForDepthEstimation.from_pretrained(model_name, local_files_only=True)
+        except Exception as e:
+            raise FileNotFoundError(
+                "ZoeDepth is configured for offline/local-only use. "
+                f"Transformers assets for '{model_name}' were not found locally. "
+                f"Original error: {type(e).__name__}: {e}"
+            ) from e
         self.device = "cpu"
 
     @classmethod  
@@ -102,7 +117,7 @@ class ZoeDetector:
     
     def to(self, device):
         """Move model to specified device."""
-        self.pipe.model = self.pipe.model.to(device) 
+        self.model = self.model.to(device)
         self.device = device
         return self
         
@@ -115,15 +130,23 @@ class ZoeDetector:
             pil_image = Image.fromarray(input_image)
         else:
             pil_image = input_image
-        
+
         with torch.no_grad():
-            result = self.pipe(pil_image)
-            depth = result["depth"]
-            
-            if isinstance(depth, Image.Image):
-                depth_array = np.array(depth, dtype=np.float32)
-            else:
-                depth_array = np.array(depth)
+            inputs = self.processor(images=pil_image, return_tensors="pt")
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}
+            outputs = self.model(**inputs)
+            predicted_depth = getattr(outputs, "predicted_depth", None)
+            if predicted_depth is None:
+                raise RuntimeError("ZoeDepth model did not return predicted_depth")
+
+            depth = torch.nn.functional.interpolate(
+                predicted_depth.unsqueeze(1),
+                size=pil_image.size[::-1],
+                mode="bicubic",
+                align_corners=False,
+            ).squeeze()
+
+            depth_array = depth.detach().float().cpu().numpy()
                 
             vmin = np.percentile(depth_array, 2)
             vmax = np.percentile(depth_array, 85)
@@ -146,7 +169,16 @@ class ZoeDepthAnythingDetector:
     
     def __init__(self, model_name="Intel/zoedepth-nyu-kitti"):
         """Initialize ZoeDepthAnything detector."""
-        self.pipe = pipeline(task="depth-estimation", model=model_name)
+        self.model_name = model_name
+        try:
+            self.processor = AutoImageProcessor.from_pretrained(model_name, local_files_only=True)
+            self.model = ZoeDepthForDepthEstimation.from_pretrained(model_name, local_files_only=True)
+        except Exception as e:
+            raise FileNotFoundError(
+                "ZoeDepthAnything is configured for offline/local-only use. "
+                f"Transformers assets for '{model_name}' were not found locally. "
+                f"Original error: {type(e).__name__}: {e}"
+            ) from e
         self.device = "cpu"
 
     @classmethod  
@@ -156,14 +188,15 @@ class ZoeDepthAnythingDetector:
     
     def to(self, device):
         """Move model to specified device."""
-        self.pipe.model = self.pipe.model.to(device) 
+        self.model = self.model.to(device)
         self.device = device
         return self
         
     def __call__(self, input_image, detect_resolution=512, output_type=None, upscale_method="INTER_CUBIC", **kwargs):
         """Perform depth estimation."""
-        detector = ZoeDetector(model_name="Intel/zoedepth-nyu-kitti")
-        detector.pipe = self.pipe
+        detector = ZoeDetector(model_name=self.model_name)
+        detector.processor = self.processor
+        detector.model = self.model
         detector.device = self.device
         
         return detector(input_image, detect_resolution, output_type, upscale_method, **kwargs)

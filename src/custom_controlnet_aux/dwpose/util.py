@@ -102,7 +102,7 @@ def draw_bodypose(canvas: np.ndarray, keypoints: List[Keypoint], xinsr_stick_sca
     CH, CW, _ = canvas.shape
     stickwidth = 4
 
-    # Ref: https://huggingface.co/xinsir/controlnet-openpose-sdxl-1.0
+    # Ref: xinsir/controlnet-openpose-sdxl-1.0 (upstream)
     max_side = max(CW, CH)
     if xinsr_stick_scaling:
         stick_scale = 1 if max_side < 500 else min(2 + (max_side // 1000), 7)

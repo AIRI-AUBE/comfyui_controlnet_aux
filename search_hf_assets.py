@@ -34,23 +34,23 @@ for preprocc in os.listdir(aux_dir):
 for preprocc, re_result in re_result_dict.items():
     model_name, filenames = re_result[0], re_result[1:]
     print(f"* {preprocc}: ", end=' ')
-    assests_md = ', '.join([f"[{model_name}/{filename}](https://huggingface.co/{model_name}/blob/main/{filename})" for filename in filenames])
-    print(assests_md)
+    assets_local = ', '.join([str((Path(__file__).parent / 'ckpts' / model_name / filename).as_posix()) for filename in filenames])
+    print(assets_local)
 
 preprocc = "dwpose"
 model_name, filenames = VAR_DICT['DWPOSE_MODEL_NAME'], ["yolox_l.onnx", "dw-ll_ucoco_384.onnx"]
 print(f"* {preprocc}: ", end=' ')
-assests_md = ', '.join([f"[{model_name}/{filename}](https://huggingface.co/{model_name}/blob/main/{filename})" for filename in filenames])
-print(assests_md)
+assets_local = ', '.join([str((Path(__file__).parent / 'ckpts' / model_name / filename).as_posix()) for filename in filenames])
+print(assets_local)
 
 preprocc = "yolo-nas"
 model_name, filenames = "hr16/yolo-nas-fp16", ["yolo_nas_l_fp16.onnx", "yolo_nas_m_fp16.onnx", "yolo_nas_s_fp16.onnx"]
 print(f"* {preprocc}: ", end=' ')
-assests_md = ', '.join([f"[{model_name}/{filename}](https://huggingface.co/{model_name}/blob/main/{filename})" for filename in filenames])
-print(assests_md)
+assets_local = ', '.join([str((Path(__file__).parent / 'ckpts' / model_name / filename).as_posix()) for filename in filenames])
+print(assets_local)
 
 preprocc = "dwpose-torchscript"
 model_name, filenames = "hr16/DWPose-TorchScript-BatchSize5", ["dw-ll_ucoco_384_bs5.torchscript.pt", "rtmpose-m_ap10k_256_bs5.torchscript.pt"]
 print(f"* {preprocc}: ", end=' ')
-assests_md = ', '.join([f"[{model_name}/{filename}](https://huggingface.co/{model_name}/blob/main/{filename})" for filename in filenames])
-print(assests_md)
+assets_local = ', '.join([str((Path(__file__).parent / 'ckpts' / model_name / filename).as_posix()) for filename in filenames])
+print(assets_local)

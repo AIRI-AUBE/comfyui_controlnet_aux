@@ -2,6 +2,7 @@
 OneFormer implementation using HuggingFace transformers for PyTorch 2.7 compatibility.
 Provides equivalent functionality to the original detectron2 implementation.
 """
+import os
 import numpy as np
 import cv2
 import torch
@@ -9,6 +10,12 @@ from PIL import Image
 
 # Import utilities
 from ..util import HWC3, common_input_validate, resize_image_with_pad, custom_hf_download, HF_MODEL_NAME
+
+
+# Ensure transformers never attempts to contact huggingface.co.
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 
 
 class OneformerSegmentor:
@@ -26,8 +33,16 @@ class OneformerSegmentor:
         from transformers import OneFormerProcessor, OneFormerForUniversalSegmentation
         
         self.model_name = model_name
-        self.processor = OneFormerProcessor.from_pretrained(model_name)
-        self.model = OneFormerForUniversalSegmentation.from_pretrained(model_name)
+        try:
+            self.processor = OneFormerProcessor.from_pretrained(model_name, local_files_only=True)
+            self.model = OneFormerForUniversalSegmentation.from_pretrained(model_name, local_files_only=True)
+        except Exception as e:
+            raise FileNotFoundError(
+                "OneFormer is configured for offline/local-only use. "
+                f"Transformers assets for '{model_name}' were not found in the local Hugging Face cache. "
+                "Pre-download the model (processor/config) into the cache or provide a local directory path instead of a Hub repo id. "
+                f"Original error: {type(e).__name__}: {e}"
+            ) from e
         self.device = "cpu"
 
     @classmethod  

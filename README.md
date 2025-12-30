@@ -5,7 +5,7 @@ Plug-and-play [ComfyUI](https://github.com/comfyanonymous/ComfyUI) node sets for
 
 ![](./examples/CNAuxBanner.jpg)
 
-The code is copy-pasted from the respective folders in https://github.com/lllyasviel/ControlNet/tree/main/annotator and connected to [the 🤗 Hub](https://huggingface.co/lllyasviel/Annotators).
+The code is copy-pasted from the respective folders in https://github.com/lllyasviel/ControlNet/tree/main/annotator. This fork is configured to load required model files locally (no runtime connection to the 🤗 Hub).
 
 All credit & copyright goes to https://github.com/lllyasviel.
 

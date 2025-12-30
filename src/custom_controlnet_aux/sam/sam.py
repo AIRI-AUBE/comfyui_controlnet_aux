@@ -16,8 +16,15 @@ class SamDetector:
         from transformers import SamModel, SamProcessor
         
         self.model_name = model_name
-        self.processor = SamProcessor.from_pretrained(model_name)
-        self.model = SamModel.from_pretrained(model_name)
+        try:
+            self.processor = SamProcessor.from_pretrained(model_name, local_files_only=True)
+            self.model = SamModel.from_pretrained(model_name, local_files_only=True)
+        except Exception as e:
+            raise FileNotFoundError(
+                "SAM is configured for offline/local-only use. "
+                f"Transformers assets for '{model_name}' were not found locally. "
+                f"Original error: {type(e).__name__}: {e}"
+            ) from e
         self.device = "cpu"
 
     @classmethod  
