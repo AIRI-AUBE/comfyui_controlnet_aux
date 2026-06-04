@@ -53,7 +53,7 @@ You need to use its node directly to set thresholds.
 | Scribble Lines              | scribble                  | control_v11p_sd15_scribble <br> control_scribble |
 | Scribble XDoG Lines         | scribble_xdog             | control_v11p_sd15_scribble <br> control_scribble |
 | Fake Scribble Lines         | scribble_hed              | control_v11p_sd15_scribble <br> control_scribble |
-| TEED Soft-Edge Lines        | teed                      | [controlnet-sd-xl-1.0-softedge-dexined](https://huggingface.co/SargeZT/controlnet-sd-xl-1.0-softedge-dexined/blob/main/controlnet-sd-xl-1.0-softedge-dexined.safetensors) <br> control_v11p_sd15_softedge (Theoretically)
+| TEED Soft-Edge Lines        | teed                      | controlnet-sd-xl-1.0-softedge-dexined <br> control_v11p_sd15_softedge (Theoretically)
 | Scribble PiDiNet Lines      | scribble_pidinet          | control_v11p_sd15_scribble <br> control_scribble |
 | AnyLine Lineart             |                           | mistoLine_fp16.safetensors <br> mistoLine_rank256 <br> control_v11p_sd15s2_lineart_anime <br> control_v11p_sd15_lineart |
 
@@ -65,13 +65,13 @@ You need to use its node directly to set thresholds.
 | Zoe Depth Map             | depth_zoe                 | control_v11f1p_sd15_depth <br> control_depth <br> t2iadapter_depth |
 | MiDaS Normal Map          | normal_map                | control_normal                            |
 | BAE Normal Map            | normal_bae                | control_v11p_sd15_normalbae               |
-| MeshGraphormer Hand Refiner ([HandRefinder](https://github.com/wenquanlu/HandRefiner))  | depth_hand_refiner | [control_sd15_inpaint_depth_hand_fp16](https://huggingface.co/hr16/ControlNet-HandRefiner-pruned/blob/main/control_sd15_inpaint_depth_hand_fp16.safetensors) |
-| Depth Anything            |  depth_anything           | [Depth-Anything](https://huggingface.co/spaces/LiheYoung/Depth-Anything/blob/main/checkpoints_controlnet/diffusion_pytorch_model.safetensors) |
-| Zoe Depth Anything <br> (Basically Zoe but the encoder is replaced with DepthAnything)       | depth_anything | [Depth-Anything](https://huggingface.co/spaces/LiheYoung/Depth-Anything/blob/main/checkpoints_controlnet/diffusion_pytorch_model.safetensors) |
+| MeshGraphormer Hand Refiner ([HandRefinder](https://github.com/wenquanlu/HandRefiner))  | depth_hand_refiner | control_sd15_inpaint_depth_hand_fp16 |
+| Depth Anything            |  depth_anything           | Depth-Anything |
+| Zoe Depth Anything <br> (Basically Zoe but the encoder is replaced with DepthAnything)       | depth_anything | Depth-Anything |
 | Normal DSINE              |                           | control_normal/control_v11p_sd15_normalbae |
 | Metric3D Depth            |                           | control_v11f1p_sd15_depth <br> control_depth <br> t2iadapter_depth |
 | Metric3D Normal           |                           | control_v11p_sd15_normalbae |
-| Depth Anything V2         |                           | [Depth-Anything](https://huggingface.co/spaces/LiheYoung/Depth-Anything/blob/main/checkpoints_controlnet/diffusion_pytorch_model.safetensors) |
+| Depth Anything V2         |                           | Depth-Anything |
 
 ## Faces and Poses Estimators
 | Preprocessor Node           | sd-webui-controlnet/other |          ControlNet/T2I-Adapter           |
@@ -79,7 +79,7 @@ You need to use its node directly to set thresholds.
 | DWPose Estimator                 | dw_openpose_full          | control_v11p_sd15_openpose <br> control_openpose <br> t2iadapter_openpose |
 | OpenPose Estimator               | openpose (detect_body) <br> openpose_hand (detect_body + detect_hand) <br> openpose_faceonly (detect_face) <br> openpose_full (detect_hand + detect_body + detect_face)    | control_v11p_sd15_openpose <br> control_openpose <br> t2iadapter_openpose |
 | MediaPipe Face Mesh         | mediapipe_face            | controlnet_sd21_laion_face_v2             | 
-| Animal Estimator                 | animal_openpose           | [control_sd15_animal_openpose_fp16](https://huggingface.co/huchenlei/animal_openpose/blob/main/control_sd15_animal_openpose_fp16.pth) |
+| Animal Estimator                 | animal_openpose           | control_sd15_animal_openpose_fp16 |
 
 ## Optical Flow Estimators
 | Preprocessor Node           | sd-webui-controlnet/other |          ControlNet/T2I-Adapter           |
@@ -169,7 +169,7 @@ for o in history['outputs']:
 ## Recolor
 | Preprocessor Node           | sd-webui-controlnet/other |          ControlNet/T2I-Adapter           |
 |-----------------------------|---------------------------|-------------------------------------------|
-| Image Luminance             | recolor_luminance         | [ioclab_sd15_recolor](https://huggingface.co/lllyasviel/sd_control_collection/resolve/main/ioclab_sd15_recolor.safetensors) <br> [sai_xl_recolor_256lora](https://huggingface.co/lllyasviel/sd_control_collection/resolve/main/sai_xl_recolor_256lora.safetensors) <br> [bdsqlsz_controlllite_xl_recolor_luminance](https://huggingface.co/bdsqlsz/qinglong_controlnet-lllite/resolve/main/bdsqlsz_controlllite_xl_recolor_luminance.safetensors) |
+| Image Luminance             | recolor_luminance         | ioclab_sd15_recolor <br> sai_xl_recolor_256lora <br> bdsqlsz_controlllite_xl_recolor_luminance |
 | Image Intensity             | recolor_intensity         | Idk. Maybe same as above? |
 
 # Examples
@@ -211,34 +211,35 @@ Note that if this is your first time using ComfyUI, please test if it can run on
 
 ![](./examples/example_onnx.png)
 
-# Assets files of preprocessors
-* anime_face_segment:  [bdsqlsz/qinglong_controlnet-lllite/Annotators/UNet.pth](https://huggingface.co/bdsqlsz/qinglong_controlnet-lllite/blob/main/Annotators/UNet.pth), [anime-seg/isnetis.ckpt](https://huggingface.co/skytnt/anime-seg/blob/main/isnetis.ckpt)
-* densepose:  [LayerNorm/DensePose-TorchScript-with-hint-image/densepose_r50_fpn_dl.torchscript](https://huggingface.co/LayerNorm/DensePose-TorchScript-with-hint-image/blob/main/densepose_r50_fpn_dl.torchscript)
-* dwpose:  
-* * bbox_detector: Either [yzd-v/DWPose/yolox_l.onnx](https://huggingface.co/yzd-v/DWPose/blob/main/yolox_l.onnx), [hr16/yolox-onnx/yolox_l.torchscript.pt](https://huggingface.co/hr16/yolox-onnx/blob/main/yolox_l.torchscript.pt), [hr16/yolo-nas-fp16/yolo_nas_l_fp16.onnx](https://huggingface.co/hr16/yolo-nas-fp16/blob/main/yolo_nas_l_fp16.onnx), [hr16/yolo-nas-fp16/yolo_nas_m_fp16.onnx](https://huggingface.co/hr16/yolo-nas-fp16/blob/main/yolo_nas_m_fp16.onnx), [hr16/yolo-nas-fp16/yolo_nas_s_fp16.onnx](https://huggingface.co/hr16/yolo-nas-fp16/blob/main/yolo_nas_s_fp16.onnx)
-* * pose_estimator: Either [hr16/DWPose-TorchScript-BatchSize5/dw-ll_ucoco_384_bs5.torchscript.pt](https://huggingface.co/hr16/DWPose-TorchScript-BatchSize5/blob/main/dw-ll_ucoco_384_bs5.torchscript.pt), [yzd-v/DWPose/dw-ll_ucoco_384.onnx](https://huggingface.co/yzd-v/DWPose/blob/main/dw-ll_ucoco_384.onnx)
-* animal_pose (ap10k):
-* * bbox_detector: Either [yzd-v/DWPose/yolox_l.onnx](https://huggingface.co/yzd-v/DWPose/blob/main/yolox_l.onnx), [hr16/yolox-onnx/yolox_l.torchscript.pt](https://huggingface.co/hr16/yolox-onnx/blob/main/yolox_l.torchscript.pt), [hr16/yolo-nas-fp16/yolo_nas_l_fp16.onnx](https://huggingface.co/hr16/yolo-nas-fp16/blob/main/yolo_nas_l_fp16.onnx), [hr16/yolo-nas-fp16/yolo_nas_m_fp16.onnx](https://huggingface.co/hr16/yolo-nas-fp16/blob/main/yolo_nas_m_fp16.onnx), [hr16/yolo-nas-fp16/yolo_nas_s_fp16.onnx](https://huggingface.co/hr16/yolo-nas-fp16/blob/main/yolo_nas_s_fp16.onnx)
-* * pose_estimator: Either [hr16/DWPose-TorchScript-BatchSize5/rtmpose-m_ap10k_256_bs5.torchscript.pt](https://huggingface.co/hr16/DWPose-TorchScript-BatchSize5/blob/main/rtmpose-m_ap10k_256_bs5.torchscript.pt), [hr16/UnJIT-DWPose/rtmpose-m_ap10k_256.onnx](https://huggingface.co/hr16/UnJIT-DWPose/blob/main/rtmpose-m_ap10k_256.onnx)
-* hed:  [lllyasviel/Annotators/ControlNetHED.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/ControlNetHED.pth)
-* leres:  [lllyasviel/Annotators/res101.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/res101.pth), [lllyasviel/Annotators/latest_net_G.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/latest_net_G.pth)
-* lineart:  [lllyasviel/Annotators/sk_model.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/sk_model.pth), [lllyasviel/Annotators/sk_model2.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/sk_model2.pth)
-* lineart_anime:  [lllyasviel/Annotators/netG.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/netG.pth)
-* manga_line:  [lllyasviel/Annotators/erika.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/erika.pth)
-* mesh_graphormer:  [hr16/ControlNet-HandRefiner-pruned/graphormer_hand_state_dict.bin](https://huggingface.co/hr16/ControlNet-HandRefiner-pruned/blob/main/graphormer_hand_state_dict.bin), [hr16/ControlNet-HandRefiner-pruned/hrnetv2_w64_imagenet_pretrained.pth](https://huggingface.co/hr16/ControlNet-HandRefiner-pruned/blob/main/hrnetv2_w64_imagenet_pretrained.pth)
-* midas: local transformers repo under `ckpts/Intel/dpt-hybrid-midas` or `ckpts/Intel/dpt-large` with `config.json`, `preprocessor_config.json`, and `model.safetensors` or `pytorch_model.bin`
-* mlsd:  [lllyasviel/Annotators/mlsd_large_512_fp32.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/mlsd_large_512_fp32.pth)
-* normalbae:  [lllyasviel/Annotators/scannet.pt](https://huggingface.co/lllyasviel/Annotators/blob/main/scannet.pt)
-* oneformer: local transformers repo under `ckpts/shi-labs/oneformer_ade20k_swin_large` or `ckpts/shi-labs/oneformer_coco_swin_large` with `config.json`, `preprocessor_config.json`, `tokenizer_config.json`, `special_tokens_map.json`, `vocab.json`, `merges.txt`, and `model.safetensors` or `pytorch_model.bin`
-* open_pose:  [lllyasviel/Annotators/body_pose_model.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/body_pose_model.pth), [lllyasviel/Annotators/hand_pose_model.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/hand_pose_model.pth), [lllyasviel/Annotators/facenet.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/facenet.pth)
-* pidi:  [lllyasviel/Annotators/table5_pidinet.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/table5_pidinet.pth)
-* sam: local transformers repo under `ckpts/facebook/sam-vit-base`, `ckpts/facebook/sam-vit-large`, or `ckpts/facebook/sam-vit-huge` with `config.json`, `preprocessor_config.json`, and `model.safetensors` or `pytorch_model.bin`
-* uniformer:  [lllyasviel/Annotators/upernet_global_small.pth](https://huggingface.co/lllyasviel/Annotators/blob/main/upernet_global_small.pth)
-* zoe: local transformers repo under `ckpts/Intel/zoedepth-nyu-kitti` with `config.json`, `preprocessor_config.json`, and `model.safetensors` or `pytorch_model.bin`
-* teed:  [bdsqlsz/qinglong_controlnet-lllite/7_model.pth](https://huggingface.co/bdsqlsz/qinglong_controlnet-lllite/blob/main/Annotators/7_model.pth)
+# Offline preprocessor assets
+Runtime downloads are disabled. Place model assets under `ckpts/` in this repository, or set `AUX_ANNOTATOR_CKPTS_PATH` and use the same relative layout there.
+
+* anime_face_segment: `ckpts/bdsqlsz/qinglong_controlnet-lllite/Annotators/UNet.pth`, `ckpts/skytnt/anime-seg/isnetis.ckpt`
+* densepose: `ckpts/LayerNorm/DensePose-TorchScript-with-hint-image/densepose_r50_fpn_dl.torchscript`
 * depth_anything: local transformers repo under `ckpts/LiheYoung/depth-anything-large-hf`, `ckpts/LiheYoung/depth-anything-base-hf`, or `ckpts/LiheYoung/depth-anything-small-hf` with `config.json`, `preprocessor_config.json`, and `model.safetensors` or `pytorch_model.bin`
-* diffusion_edge: Either [hr16/Diffusion-Edge/diffusion_edge_indoor.pt](https://huggingface.co/hr16/Diffusion-Edge/blob/main/diffusion_edge_indoor.pt), [hr16/Diffusion-Edge/diffusion_edge_urban.pt](https://huggingface.co/hr16/Diffusion-Edge/blob/main/diffusion_edge_urban.pt) or [hr16/Diffusion-Edge/diffusion_edge_natrual.pt](https://huggingface.co/hr16/Diffusion-Edge/blob/main/diffusion_edge_natrual.pt)
-* unimatch: Either [hr16/Unimatch/gmflow-scale2-regrefine6-mixdata.pth](https://huggingface.co/hr16/Unimatch/blob/main/gmflow-scale2-regrefine6-mixdata.pth), [hr16/Unimatch/gmflow-scale2-mixdata.pth](https://huggingface.co/hr16/Unimatch/blob/main/gmflow-scale2-mixdata.pth) or [hr16/Unimatch/gmflow-scale1-mixdata.pth](https://huggingface.co/hr16/Unimatch/blob/main/gmflow-scale1-mixdata.pth)
+* depth_anything_v2: `ckpts/depth-anything/Depth-Anything-V2-Small/depth_anything_v2_vits.pth`, `ckpts/depth-anything/Depth-Anything-V2-Base/depth_anything_v2_vitb.pth`, `ckpts/depth-anything/Depth-Anything-V2-Large/depth_anything_v2_vitl.pth`, `ckpts/depth-anything/Depth-Anything-V2-Giant/depth_anything_v2_vitg.pth`, `ckpts/depth-anything/Depth-Anything-V2-Metric-VKITTI-Large/depth_anything_v2_metric_vkitti_vitl.pth`, `ckpts/depth-anything/Depth-Anything-V2-Metric-Hypersim-Large/depth_anything_v2_metric_hypersim_vitl.pth`
+* diffusion_edge: `ckpts/hr16/Diffusion-Edge/diffusion_edge_indoor.pt`, `ckpts/hr16/Diffusion-Edge/diffusion_edge_urban.pt`, or `ckpts/hr16/Diffusion-Edge/diffusion_edge_natrual.pt`
+* dsine: `ckpts/hr16/Diffusion-Edge/dsine.pt`
+* dwpose: bbox detector at `ckpts/yzd-v/DWPose/yolox_l.onnx`, `ckpts/hr16/yolox-onnx/yolox_l.torchscript.pt`, `ckpts/hr16/yolo-nas-fp16/yolo_nas_l_fp16.onnx`, `ckpts/hr16/yolo-nas-fp16/yolo_nas_m_fp16.onnx`, or `ckpts/hr16/yolo-nas-fp16/yolo_nas_s_fp16.onnx`; pose estimator at `ckpts/yzd-v/DWPose/dw-ll_ucoco_384.onnx` or `ckpts/hr16/DWPose-TorchScript-BatchSize5/dw-ll_ucoco_384_bs5.torchscript.pt`
+* animal_pose: bbox detector at `ckpts/yzd-v/DWPose/yolox_l.onnx`, `ckpts/hr16/yolox-onnx/yolox_l.torchscript.pt`, `ckpts/hr16/yolo-nas-fp16/yolo_nas_l_fp16.onnx`, `ckpts/hr16/yolo-nas-fp16/yolo_nas_m_fp16.onnx`, or `ckpts/hr16/yolo-nas-fp16/yolo_nas_s_fp16.onnx`; pose estimator at `ckpts/hr16/UnJIT-DWPose/rtmpose-m_ap10k_256.onnx` or `ckpts/hr16/DWPose-TorchScript-BatchSize5/rtmpose-m_ap10k_256_bs5.torchscript.pt`
+* hed: `ckpts/lllyasviel/Annotators/ControlNetHED.pth`
+* leres: `ckpts/lllyasviel/Annotators/res101.pth`, `ckpts/lllyasviel/Annotators/latest_net_G.pth`
+* lineart: `ckpts/lllyasviel/Annotators/sk_model.pth`, `ckpts/lllyasviel/Annotators/sk_model2.pth`
+* lineart_anime: `ckpts/lllyasviel/Annotators/netG.pth`
+* manga_line: `ckpts/lllyasviel/Annotators/erika.pth`
+* mesh_graphormer: `ckpts/hr16/ControlNet-HandRefiner-pruned/graphormer_hand_state_dict.bin`, `ckpts/hr16/ControlNet-HandRefiner-pruned/hrnetv2_w64_imagenet_pretrained.pth`; Graphormer config is bundled at `src/custom_mesh_graphormer/modeling/bert/bert-base-uncased`
+* metric3d: `ckpts/JUGGHM/Metric3D/metric_depth_vit_small_800k.pth`, `ckpts/JUGGHM/Metric3D/metric_depth_vit_large_800k.pth`, or `ckpts/JUGGHM/Metric3D/metric_depth_vit_giant2_800k.pth`
+* midas: local transformers repo under `ckpts/Intel/dpt-hybrid-midas` or `ckpts/Intel/dpt-large` with `config.json`, `preprocessor_config.json`, and `model.safetensors` or `pytorch_model.bin`
+* mlsd: `ckpts/lllyasviel/Annotators/mlsd_large_512_fp32.pth`
+* normalbae: `ckpts/lllyasviel/Annotators/scannet.pt`
+* oneformer: local transformers repo under `ckpts/shi-labs/oneformer_ade20k_swin_large` or `ckpts/shi-labs/oneformer_coco_swin_large` with `config.json`, `preprocessor_config.json`, `tokenizer_config.json`, `special_tokens_map.json`, `vocab.json`, `merges.txt`, and `model.safetensors` or `pytorch_model.bin`
+* open_pose: `ckpts/lllyasviel/Annotators/body_pose_model.pth`, `ckpts/lllyasviel/Annotators/hand_pose_model.pth`, `ckpts/lllyasviel/Annotators/facenet.pth`
+* pidi: `ckpts/lllyasviel/Annotators/table5_pidinet.pth`
+* sam: local transformers repo under `ckpts/facebook/sam-vit-base`, `ckpts/facebook/sam-vit-large`, or `ckpts/facebook/sam-vit-huge` with `config.json`, `preprocessor_config.json`, and `model.safetensors` or `pytorch_model.bin`
+* teed: `ckpts/bdsqlsz/qinglong_controlnet-lllite/Annotators/7_model.pth`
+* uniformer: `ckpts/lllyasviel/Annotators/upernet_global_small.pth`
+* unimatch: `ckpts/hr16/Unimatch/gmflow-scale2-regrefine6-mixdata.pth`, `ckpts/hr16/Unimatch/gmflow-scale2-mixdata.pth`, or `ckpts/hr16/Unimatch/gmflow-scale1-mixdata.pth`
+* zoe: local transformers repo under `ckpts/Intel/zoedepth-nyu-kitti` with `config.json`, `preprocessor_config.json`, and `model.safetensors` or `pytorch_model.bin`
 * zoe_depth_anything: local transformers repo under `ckpts/Intel/zoedepth-nyu-kitti` with `config.json`, `preprocessor_config.json`, and `model.safetensors` or `pytorch_model.bin`
 # 2000 Stars 😄
 <a href="https://star-history.com/#Fannovel16/comfyui_controlnet_aux&Date">
