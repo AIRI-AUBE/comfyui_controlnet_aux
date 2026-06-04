@@ -145,7 +145,7 @@ URL_ASSETS: tuple[UrlAsset, ...] = (
     UrlAsset(
         "https://download.pytorch.org/models/efficientnet_b7_lukemelas-dcc49843.pth",
         "torch/efficientnet_b7_lukemelas-dcc49843.pth",
-        "dcc49843",
+        "c5b4e57e",
     ),
     UrlAsset(
         "https://download.pytorch.org/models/swin_b-68c6b09e.pth",
