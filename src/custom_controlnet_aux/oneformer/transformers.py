@@ -2,7 +2,10 @@
 OneFormer implementation using HuggingFace transformers for PyTorch 2.7 compatibility.
 Provides equivalent functionality to the original detectron2 implementation.
 """
+from contextlib import suppress
+import json
 import os
+import tempfile
 from pathlib import Path
 import numpy as np
 import cv2
@@ -35,6 +38,116 @@ def _validate_local_oneformer_assets(local_model_path):
     )
 
 
+def _build_oneformer_class_info(metadata):
+    if not isinstance(metadata, dict):
+        return None
+
+    class_names = metadata.get("class_names")
+    thing_ids = metadata.get("thing_ids")
+    if not isinstance(class_names, list) or not isinstance(thing_ids, list):
+        return None
+
+    try:
+        thing_ids = {int(class_id) for class_id in thing_ids}
+    except (TypeError, ValueError):
+        return None
+
+    class_info = {}
+    for key, value in metadata.items():
+        if key in {"class_names", "thing_ids"}:
+            continue
+        if not isinstance(key, str) or not key.isdigit() or not isinstance(value, str):
+            continue
+
+        class_id = int(key)
+        class_info[key] = {
+            "name": value,
+            "isthing": class_id in thing_ids,
+        }
+
+    if not class_info or len(class_info) != len(class_names):
+        return None
+
+    return class_info
+
+
+def _read_oneformer_preprocessor_config(local_model_path):
+    config_path = Path(local_model_path) / "preprocessor_config.json"
+    with config_path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _iter_oneformer_metadata_candidates(local_model_path, repo_path, class_info_file):
+    local_model_dir = Path(local_model_path)
+    yield local_model_dir / class_info_file, str(local_model_dir)
+
+    if not repo_path:
+        return
+
+    repo_dir = Path(repo_path)
+    if repo_dir.is_dir():
+        yield repo_dir / class_info_file, str(repo_dir)
+
+    with suppress(FileNotFoundError):
+        resolved_repo_path = resolve_local_hf_repo_path(repo_path)
+        resolved_repo_dir = Path(resolved_repo_path)
+        yield resolved_repo_dir / class_info_file, resolved_repo_path
+
+
+class _PreparedOneFormerProcessorConfig:
+    def __init__(self, local_model_path):
+        self.local_model_path = local_model_path
+        self.temp_dir = None
+        self.processor_kwargs = {"local_files_only": True}
+
+    def __enter__(self):
+        preprocessor_config = _read_oneformer_preprocessor_config(self.local_model_path)
+        class_info_file = preprocessor_config.get("class_info_file")
+        repo_path = preprocessor_config.get("repo_path")
+
+        if not class_info_file:
+            return self.processor_kwargs
+
+        for metadata_path, resolved_repo_path in _iter_oneformer_metadata_candidates(
+            self.local_model_path,
+            repo_path,
+            class_info_file,
+        ):
+            if metadata_path.is_file():
+                self.processor_kwargs.update(
+                    class_info_file=class_info_file,
+                    repo_path=resolved_repo_path,
+                )
+                return self.processor_kwargs
+
+        class_info = _build_oneformer_class_info(preprocessor_config.get("metadata"))
+        if class_info is None:
+            raise FileNotFoundError(
+                "OneFormer preprocessor metadata is incomplete for offline use. "
+                f"Could not find local class metadata file '{class_info_file}' for {self.local_model_path}, "
+                "and the embedded preprocessor metadata could not reconstruct it."
+            )
+
+        self.temp_dir = tempfile.TemporaryDirectory(prefix="oneformer_metadata_")
+        metadata_path = Path(self.temp_dir.name) / class_info_file
+        with metadata_path.open("w", encoding="utf-8") as handle:
+            json.dump(class_info, handle)
+
+        self.processor_kwargs.update(
+            class_info_file=class_info_file,
+            repo_path=self.temp_dir.name,
+        )
+        return self.processor_kwargs
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.temp_dir is not None:
+            self.temp_dir.cleanup()
+
+
+def _prepare_oneformer_processor_kwargs(local_model_path):
+    return _PreparedOneFormerProcessorConfig(local_model_path)
+
+
 class OneformerSegmentor:
     """
     OneFormer segmentation using HuggingFace transformers implementation.
@@ -53,8 +166,12 @@ class OneformerSegmentor:
         try:
             local_model_path = resolve_local_hf_repo_path(model_name)
             _validate_local_oneformer_assets(local_model_path)
-            self.processor = OneFormerProcessor.from_pretrained(local_model_path)
-            self.model = OneFormerForUniversalSegmentation.from_pretrained(local_model_path)
+            with _prepare_oneformer_processor_kwargs(local_model_path) as processor_kwargs:
+                self.processor = OneFormerProcessor.from_pretrained(local_model_path, **processor_kwargs)
+            self.model = OneFormerForUniversalSegmentation.from_pretrained(
+                local_model_path,
+                local_files_only=True,
+            )
         except Exception as e:
             raise FileNotFoundError(
                 "OneFormer is configured for repo-local-only use. "

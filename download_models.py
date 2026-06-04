@@ -118,6 +118,7 @@ TRANSFORMER_REPO_ASSETS: tuple[HfRepoAsset, ...] = (
     HfRepoAsset("LiheYoung/depth-anything-small-hf"),
     HfRepoAsset("Intel/dpt-large"),
     HfRepoAsset("Intel/dpt-hybrid-midas"),
+    HfRepoAsset("shi-labs/oneformer_demo", repo_type="dataset"),
     HfRepoAsset("shi-labs/oneformer_ade20k_swin_large"),
     HfRepoAsset("shi-labs/oneformer_coco_swin_large"),
     HfRepoAsset("facebook/sam-vit-base"),
