@@ -3,6 +3,7 @@ OneFormer implementation using HuggingFace transformers for PyTorch 2.7 compatib
 Provides equivalent functionality to the original detectron2 implementation.
 """
 import os
+from pathlib import Path
 import numpy as np
 import cv2
 import torch
@@ -16,6 +17,29 @@ from ..util import HWC3, common_input_validate, resize_image_with_pad, HF_MODEL_
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
+
+
+def _validate_local_oneformer_assets(local_model_path):
+    required_files = [
+        "config.json",
+        "preprocessor_config.json",
+        "tokenizer_config.json",
+        "special_tokens_map.json",
+        "vocab.json",
+        "merges.txt",
+    ]
+    optional_weight_files = ["model.safetensors", "pytorch_model.bin"]
+
+    model_path = Path(local_model_path)
+    missing_files = [name for name in required_files if not model_path.joinpath(name).exists()]
+    if not any(model_path.joinpath(name).exists() for name in optional_weight_files):
+        missing_files.append("model.safetensors or pytorch_model.bin")
+
+    if missing_files:
+        raise FileNotFoundError(
+            "OneFormer local model repository is incomplete. "
+            f"Missing files under {local_model_path}: {', '.join(missing_files)}"
+        )
 
 
 class OneformerSegmentor:
@@ -35,6 +59,7 @@ class OneformerSegmentor:
         self.model_name = model_name
         try:
             local_model_path = resolve_local_hf_repo_path(model_name)
+            _validate_local_oneformer_assets(local_model_path)
             self.processor = OneFormerProcessor.from_pretrained(local_model_path)
             self.model = OneFormerForUniversalSegmentation.from_pretrained(local_model_path)
         except Exception as e:
