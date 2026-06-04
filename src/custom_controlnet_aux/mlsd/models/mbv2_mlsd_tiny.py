@@ -2,8 +2,9 @@ import os
 import sys
 import torch
 import torch.nn as nn
-import torch.utils.model_zoo as model_zoo
 from  torch.nn import  functional as F
+
+from custom_controlnet_aux.util import custom_torch_download
 
 
 class BlockTypeA(nn.Module):
@@ -234,7 +235,7 @@ class MobileNetV2(nn.Module):
         return self._forward_impl(x)
 
     def _load_pretrained_model(self):
-        pretrain_dict = model_zoo.load_url('https://download.pytorch.org/models/mobilenet_v2-b0353104.pth')
+        pretrain_dict = torch.load(custom_torch_download(filename="mobilenet_v2-b0353104.pth"), map_location="cpu")
         model_dict = {}
         state_dict = self.state_dict()
         for k, v in pretrain_dict.items():

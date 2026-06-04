@@ -2,18 +2,7 @@
 # coding: utf-8
 import torch.nn as nn
 
-try:
-    from urllib import urlretrieve
-except ImportError:
-    from urllib.request import urlretrieve
-
 __all__ = ['resnext101_32x8d']
-
-
-model_urls = {
-    'resnext50_32x4d': 'https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth',
-    'resnext101_32x8d': 'https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth',
-}
 
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):

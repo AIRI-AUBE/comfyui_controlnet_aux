@@ -109,15 +109,10 @@ def load_state_dict(module, state_dict, strict=False, logger=None):
 def load_url_dist(url, model_dir=None):
     """In distributed setting, this function only download checkpoint at local
     rank 0."""
-    rank, world_size = get_dist_info()
-    rank = int(os.environ.get('LOCAL_RANK', rank))
-    if rank == 0:
-        checkpoint = model_zoo.load_url(url, model_dir=model_dir)
-    if world_size > 1:
-        torch.distributed.barrier()
-        if rank > 0:
-            checkpoint = model_zoo.load_url(url, model_dir=model_dir)
-    return checkpoint
+    raise FileNotFoundError(
+        "Runtime checkpoint downloads are disabled. "
+        f"Use a local checkpoint path instead of URL: {url}"
+    )
 
 
 def load_pavimodel_dist(model_path, map_location=None):

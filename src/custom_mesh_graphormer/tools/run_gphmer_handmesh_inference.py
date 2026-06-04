@@ -25,7 +25,6 @@ from torchvision.utils import make_grid
 import gc
 import numpy as np
 import cv2
-from custom_controlnet_aux.util import resolve_local_hf_repo_path
 from custom_mesh_graphormer.modeling.bert import BertConfig, Graphormer
 from custom_mesh_graphormer.modeling.bert import Graphormer_Hand_Network as Graphormer_Network
 from custom_mesh_graphormer.modeling._mano import MANO, Mesh

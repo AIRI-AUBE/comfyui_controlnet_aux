@@ -77,20 +77,17 @@ def prompt_download(file_, source, target_dir, content_dir=None):
 
 def download_url(file_, url, target_dir):
     targetpath = os.path.join(target_dir, file_)
-    os.makedirs(target_dir, exist_ok=True)
-    with tqdm(
-        unit="B", unit_scale=True, unit_divisor=1024, miniters=1, desc=file_
-    ) as bar:
-        urllib.request.urlretrieve(url, targetpath, reporthook=reporthook(bar))
-    return targetpath
+    raise FileNotFoundError(
+        "Runtime downloads are disabled. "
+        f"Place the required file locally at: {targetpath}"
+    )
 
 
 def download_urls(urls, target_dir):
-    paths = dict()
-    for fname, url in urls.items():
-        outpath = download_url(fname, url, target_dir)
-        paths[fname] = outpath
-    return paths
+    raise FileNotFoundError(
+        "Runtime downloads are disabled. "
+        f"Place the required files locally under: {target_dir}"
+    )
 
 
 def quadratic_crop(x, bbox, alpha=1.0):
