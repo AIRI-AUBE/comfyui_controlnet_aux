@@ -5,6 +5,7 @@ Provides equivalent functionality to the original detectron2 implementation.
 from contextlib import suppress
 import json
 import os
+import shutil
 import tempfile
 from pathlib import Path
 import numpy as np
@@ -77,6 +78,16 @@ def _read_oneformer_preprocessor_config(local_model_path):
         return json.load(handle)
 
 
+def _copy_oneformer_processor_files(local_model_path, processor_dir):
+    source_dir = Path(local_model_path)
+    for source_path in source_dir.iterdir():
+        if not source_path.is_file():
+            continue
+        if source_path.name in {"model.safetensors", "pytorch_model.bin"}:
+            continue
+        shutil.copy2(source_path, processor_dir / source_path.name)
+
+
 def _iter_oneformer_metadata_candidates(local_model_path, repo_path, class_info_file):
     local_model_dir = Path(local_model_path)
     yield local_model_dir / class_info_file, str(local_model_dir)
@@ -94,57 +105,73 @@ def _iter_oneformer_metadata_candidates(local_model_path, repo_path, class_info_
         yield resolved_repo_dir / class_info_file, resolved_repo_path
 
 
+def _resolve_oneformer_metadata_repo(local_model_path, repo_path, class_info_file):
+    for metadata_path, resolved_repo_path in _iter_oneformer_metadata_candidates(
+        local_model_path,
+        repo_path,
+        class_info_file,
+    ):
+        if metadata_path.is_file():
+            return resolved_repo_path
+
+    return None
+
+
 class _PreparedOneFormerProcessorConfig:
     def __init__(self, local_model_path):
         self.local_model_path = local_model_path
         self.temp_dir = None
-        self.processor_kwargs = {"local_files_only": True}
 
     def __enter__(self):
         preprocessor_config = _read_oneformer_preprocessor_config(self.local_model_path)
         class_info_file = preprocessor_config.get("class_info_file")
         repo_path = preprocessor_config.get("repo_path")
+        processor_kwargs = {"local_files_only": True}
 
-        if not class_info_file:
-            return self.processor_kwargs
+        self.temp_dir = tempfile.TemporaryDirectory(prefix="oneformer_processor_")
+        temp_root = Path(self.temp_dir.name)
+        processor_dir = temp_root / "processor"
+        processor_dir.mkdir()
+        _copy_oneformer_processor_files(self.local_model_path, processor_dir)
 
-        for metadata_path, resolved_repo_path in _iter_oneformer_metadata_candidates(
-            self.local_model_path,
-            repo_path,
-            class_info_file,
-        ):
-            if metadata_path.is_file():
-                self.processor_kwargs.update(
-                    class_info_file=class_info_file,
-                    repo_path=resolved_repo_path,
-                )
-                return self.processor_kwargs
-
-        class_info = _build_oneformer_class_info(preprocessor_config.get("metadata"))
-        if class_info is None:
-            raise FileNotFoundError(
-                "OneFormer preprocessor metadata is incomplete for offline use. "
-                f"Could not find local class metadata file '{class_info_file}' for {self.local_model_path}, "
-                "and the embedded preprocessor metadata could not reconstruct it."
+        if class_info_file:
+            resolved_repo_path = _resolve_oneformer_metadata_repo(
+                self.local_model_path,
+                repo_path,
+                class_info_file,
             )
 
-        self.temp_dir = tempfile.TemporaryDirectory(prefix="oneformer_metadata_")
-        metadata_path = Path(self.temp_dir.name) / class_info_file
-        with metadata_path.open("w", encoding="utf-8") as handle:
-            json.dump(class_info, handle)
+            if resolved_repo_path is None:
+                class_info = _build_oneformer_class_info(preprocessor_config.get("metadata"))
+                if class_info is None:
+                    raise FileNotFoundError(
+                        "OneFormer preprocessor metadata is incomplete for offline use. "
+                        f"Could not find local class metadata file '{class_info_file}' for {self.local_model_path}, "
+                        "and the embedded preprocessor metadata could not reconstruct it."
+                    )
 
-        self.processor_kwargs.update(
-            class_info_file=class_info_file,
-            repo_path=self.temp_dir.name,
-        )
-        return self.processor_kwargs
+                metadata_dir = temp_root / "metadata"
+                metadata_dir.mkdir()
+                metadata_path = metadata_dir / class_info_file
+                with metadata_path.open("w", encoding="utf-8") as handle:
+                    json.dump(class_info, handle)
+
+                resolved_repo_path = str(metadata_dir)
+
+            preprocessor_config["class_info_file"] = class_info_file
+            preprocessor_config["repo_path"] = resolved_repo_path
+
+        with (processor_dir / "preprocessor_config.json").open("w", encoding="utf-8") as handle:
+            json.dump(preprocessor_config, handle)
+
+        return str(processor_dir), processor_kwargs
 
     def __exit__(self, exc_type, exc_value, traceback):
         if self.temp_dir is not None:
             self.temp_dir.cleanup()
 
 
-def _prepare_oneformer_processor_kwargs(local_model_path):
+def _prepare_oneformer_processor_source(local_model_path):
     return _PreparedOneFormerProcessorConfig(local_model_path)
 
 
@@ -166,8 +193,8 @@ class OneformerSegmentor:
         try:
             local_model_path = resolve_local_hf_repo_path(model_name)
             _validate_local_oneformer_assets(local_model_path)
-            with _prepare_oneformer_processor_kwargs(local_model_path) as processor_kwargs:
-                self.processor = OneFormerProcessor.from_pretrained(local_model_path, **processor_kwargs)
+            with _prepare_oneformer_processor_source(local_model_path) as (processor_source, processor_kwargs):
+                self.processor = OneFormerProcessor.from_pretrained(processor_source, **processor_kwargs)
             self.model = OneFormerForUniversalSegmentation.from_pretrained(
                 local_model_path,
                 local_files_only=True,

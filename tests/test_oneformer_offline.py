@@ -5,7 +5,7 @@ import pytest
 
 from custom_controlnet_aux.oneformer.transformers import (
     _build_oneformer_class_info,
-    _prepare_oneformer_processor_kwargs,
+    _prepare_oneformer_processor_source,
 )
 
 
@@ -14,6 +14,10 @@ def _write_preprocessor_config(model_dir: Path, config: dict) -> None:
         json.dumps(config),
         encoding="utf-8",
     )
+
+
+def _read_preprocessor_config(model_dir: Path) -> dict:
+    return json.loads((model_dir / "preprocessor_config.json").read_text(encoding="utf-8"))
 
 
 def test_build_oneformer_class_info_from_embedded_metadata():
@@ -30,7 +34,7 @@ def test_build_oneformer_class_info_from_embedded_metadata():
     }
 
 
-def test_prepare_oneformer_processor_kwargs_prefers_local_metadata_file(tmp_path):
+def test_prepare_oneformer_processor_source_prefers_local_metadata_file(tmp_path):
     class_info_file = "coco_panoptic.json"
     _write_preprocessor_config(
         tmp_path,
@@ -46,15 +50,15 @@ def test_prepare_oneformer_processor_kwargs_prefers_local_metadata_file(tmp_path
     )
     (tmp_path / class_info_file).write_text("{}", encoding="utf-8")
 
-    with _prepare_oneformer_processor_kwargs(str(tmp_path)) as kwargs:
-        assert kwargs == {
-            "local_files_only": True,
-            "class_info_file": class_info_file,
-            "repo_path": str(tmp_path),
-        }
+    with _prepare_oneformer_processor_source(str(tmp_path)) as (processor_source, kwargs):
+        prepared_config = _read_preprocessor_config(Path(processor_source))
+
+        assert kwargs == {"local_files_only": True}
+        assert prepared_config["class_info_file"] == class_info_file
+        assert prepared_config["repo_path"] == str(tmp_path)
 
 
-def test_prepare_oneformer_processor_kwargs_reconstructs_missing_metadata_file(tmp_path):
+def test_prepare_oneformer_processor_source_reconstructs_missing_metadata_file(tmp_path):
     class_info_file = "coco_panoptic.json"
     _write_preprocessor_config(
         tmp_path,
@@ -70,21 +74,23 @@ def test_prepare_oneformer_processor_kwargs_reconstructs_missing_metadata_file(t
         },
     )
 
-    with _prepare_oneformer_processor_kwargs(str(tmp_path)) as kwargs:
-        metadata_dir = Path(kwargs["repo_path"])
+    with _prepare_oneformer_processor_source(str(tmp_path)) as (processor_source, kwargs):
+        prepared_config = _read_preprocessor_config(Path(processor_source))
+        metadata_dir = Path(prepared_config["repo_path"])
         reconstructed_metadata = json.loads((metadata_dir / class_info_file).read_text(encoding="utf-8"))
 
         assert kwargs["local_files_only"] is True
-        assert kwargs["class_info_file"] == class_info_file
+        assert prepared_config["class_info_file"] == class_info_file
         assert reconstructed_metadata == {
             "0": {"name": "background", "isthing": False},
             "1": {"name": "person", "isthing": True},
         }
 
     assert not metadata_dir.exists()
+    assert not Path(processor_source).exists()
 
 
-def test_prepare_oneformer_processor_kwargs_uses_local_ckpts_repo_id(monkeypatch, tmp_path):
+def test_prepare_oneformer_processor_source_uses_local_ckpts_repo_id(monkeypatch, tmp_path):
     class_info_file = "coco_panoptic.json"
     demo_dir = tmp_path / "demo"
     demo_dir.mkdir()
@@ -107,15 +113,15 @@ def test_prepare_oneformer_processor_kwargs_uses_local_ckpts_repo_id(monkeypatch
         lambda repo_path: str(demo_dir),
     )
 
-    with _prepare_oneformer_processor_kwargs(str(tmp_path)) as kwargs:
-        assert kwargs == {
-            "local_files_only": True,
-            "class_info_file": class_info_file,
-            "repo_path": str(demo_dir),
-        }
+    with _prepare_oneformer_processor_source(str(tmp_path)) as (processor_source, kwargs):
+        prepared_config = _read_preprocessor_config(Path(processor_source))
+
+        assert kwargs == {"local_files_only": True}
+        assert prepared_config["class_info_file"] == class_info_file
+        assert prepared_config["repo_path"] == str(demo_dir)
 
 
-def test_prepare_oneformer_processor_kwargs_errors_without_any_local_metadata(tmp_path):
+def test_prepare_oneformer_processor_source_errors_without_any_local_metadata(tmp_path):
     _write_preprocessor_config(
         tmp_path,
         {
@@ -125,5 +131,5 @@ def test_prepare_oneformer_processor_kwargs_errors_without_any_local_metadata(tm
     )
 
     with pytest.raises(FileNotFoundError, match="embedded preprocessor metadata could not reconstruct it"):
-        with _prepare_oneformer_processor_kwargs(str(tmp_path)):
+        with _prepare_oneformer_processor_source(str(tmp_path)):
             pass
