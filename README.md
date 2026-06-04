@@ -214,6 +214,18 @@ Note that if this is your first time using ComfyUI, please test if it can run on
 # Offline preprocessor assets
 Runtime downloads are disabled. Place model assets under `ckpts/` in this repository, or set `AUX_ANNOTATOR_CKPTS_PATH` and use the same relative layout there.
 
+To download the runtime asset set automatically, run:
+
+```bash
+python download_models.py
+```
+
+If `huggingface_hub` is not installed in that environment, install it first:
+
+```bash
+python -m pip install huggingface_hub
+```
+
 * anime_face_segment: `ckpts/bdsqlsz/qinglong_controlnet-lllite/Annotators/UNet.pth`, `ckpts/skytnt/anime-seg/isnetis.ckpt`
 * densepose: `ckpts/LayerNorm/DensePose-TorchScript-with-hint-image/densepose_r50_fpn_dl.torchscript`
 * depth_anything: local transformers repo under `ckpts/LiheYoung/depth-anything-large-hf`, `ckpts/LiheYoung/depth-anything-base-hf`, or `ckpts/LiheYoung/depth-anything-small-hf` with `config.json`, `preprocessor_config.json`, and `model.safetensors` or `pytorch_model.bin`
@@ -241,6 +253,7 @@ Runtime downloads are disabled. Place model assets under `ckpts/` in this reposi
 * unimatch: `ckpts/hr16/Unimatch/gmflow-scale2-regrefine6-mixdata.pth`, `ckpts/hr16/Unimatch/gmflow-scale2-mixdata.pth`, or `ckpts/hr16/Unimatch/gmflow-scale1-mixdata.pth`
 * zoe: local transformers repo under `ckpts/Intel/zoedepth-nyu-kitti` with `config.json`, `preprocessor_config.json`, and `model.safetensors` or `pytorch_model.bin`
 * zoe_depth_anything: local transformers repo under `ckpts/Intel/zoedepth-nyu-kitti` with `config.json`, `preprocessor_config.json`, and `model.safetensors` or `pytorch_model.bin`
+* torch_backbones: `ckpts/torch/mobilenet_v2-b0353104.pth`, `ckpts/torch/vgg16-397923af.pth`, `ckpts/torch/resnet101-cd907fc2.pth`, `ckpts/torch/efficientnet_b7_lukemelas-dcc49843.pth`, `ckpts/torch/swin_b-68c6b09e.pth`
 # 2000 Stars 😄
 <a href="https://star-history.com/#Fannovel16/comfyui_controlnet_aux&Date">
   <picture>
