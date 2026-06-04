@@ -5,10 +5,10 @@ import math
 import torch.nn.functional as F
 from functools import partial
 from einops import rearrange, reduce
-from custom_controlnet_aux.diffusion_edge.denoising_diffusion_pytorch.efficientnet import efficientnet_b7, EfficientNet_B7_Weights
-from custom_controlnet_aux.diffusion_edge.denoising_diffusion_pytorch.resnet import resnet101, ResNet101_Weights
-from custom_controlnet_aux.diffusion_edge.denoising_diffusion_pytorch.swin_transformer import swin_b, Swin_B_Weights
-from custom_controlnet_aux.diffusion_edge.denoising_diffusion_pytorch.vgg import vgg16, VGG16_Weights
+from custom_controlnet_aux.diffusion_edge.denoising_diffusion_pytorch.efficientnet import efficientnet_b7
+from custom_controlnet_aux.diffusion_edge.denoising_diffusion_pytorch.resnet import resnet101
+from custom_controlnet_aux.diffusion_edge.denoising_diffusion_pytorch.swin_transformer import swin_b
+from custom_controlnet_aux.diffusion_edge.denoising_diffusion_pytorch.vgg import vgg16
 
 from custom_controlnet_aux.util import custom_torch_download
 # from custom_controlnet_aux.diffusion_edge.denoising_diffusion_pytorch.wcc import fft
@@ -687,13 +687,21 @@ class Unet(nn.Module):
             if cfg.get('without_pretrain', False):
                 self.init_conv_mask = efficientnet_b7()
             else:
-                self.init_conv_mask = efficientnet_b7(weights=EfficientNet_B7_Weights)
+                effnet_model = efficientnet_b7(weights=None)
+                effnet_model.load_state_dict(
+                    torch.load(custom_torch_download(filename="efficientnet_b7_lukemelas-dcc49843.pth"), map_location="cpu")
+                )
+                self.init_conv_mask = effnet_model
         elif cfg.cond_net == 'resnet':
             f_condnet = 256
             if cfg.get('without_pretrain', False):
                 self.init_conv_mask = resnet101()
             else:
-                self.init_conv_mask = resnet101(weights=ResNet101_Weights)
+                resnet_model = resnet101(weights=None)
+                resnet_model.load_state_dict(
+                    torch.load(custom_torch_download(filename="resnet101-cd907fc2.pth"), map_location="cpu")
+                )
+                self.init_conv_mask = resnet_model
         elif cfg.cond_net == 'swin':
             f_condnet = 128
             if cfg.get('without_pretrain', False):
@@ -707,7 +715,11 @@ class Unet(nn.Module):
             if cfg.get('without_pretrain', False):
                 self.init_conv_mask = vgg16()
             else:
-                self.init_conv_mask = vgg16(weights=VGG16_Weights)
+                vgg_model = vgg16(weights=None)
+                vgg_model.load_state_dict(
+                    torch.load(custom_torch_download(filename="vgg16-397923af.pth"), map_location="cpu")
+                )
+                self.init_conv_mask = vgg_model
         else:
             raise NotImplementedError
         self.init_conv = nn.Sequential(
