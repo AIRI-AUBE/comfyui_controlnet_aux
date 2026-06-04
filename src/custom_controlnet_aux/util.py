@@ -279,6 +279,37 @@ def custom_torch_download(filename, ckpts_dir=annotator_ckpts_path):
     print(f"model_path is {model_path}")
     return model_path
 
+
+def resolve_local_hf_repo_path(pretrained_model_or_path, ckpts_dir=annotator_ckpts_path, subfolder=''):
+    """Resolve a repo id or path to a directory under the repo ckpts layout."""
+
+    if pretrained_model_or_path is None:
+        raise FileNotFoundError(
+            "A local model directory must be provided or resolvable from the repo ckpts layout."
+        )
+
+    repo_or_path = Path(pretrained_model_or_path)
+    if repo_or_path.exists():
+        resolved_path = repo_or_path
+    else:
+        repo_parts = str(pretrained_model_or_path).replace('\\', '/').split('/')
+        resolved_path = Path(ckpts_dir).joinpath(*repo_parts)
+
+    if subfolder:
+        resolved_path = resolved_path.joinpath(*subfolder.split('/'))
+
+    if not resolved_path.exists():
+        raise FileNotFoundError(
+            "Hugging Face cache access is disabled. "
+            f"Place the full model repository locally at: {resolved_path} "
+            f"(ckpts_dir={ckpts_dir}, repo_id_or_path={pretrained_model_or_path}, subfolder={subfolder or '(none)'}). "
+            "You can change the base folder via the AUX_ANNOTATOR_CKPTS_PATH environment variable."
+        )
+
+    resolved_path_str = resolved_path.__str__()
+    print(f"local_repo_path is {resolved_path_str}")
+    return resolved_path_str
+
 def custom_hf_download(pretrained_model_or_path, filename, cache_dir=temp_dir, ckpts_dir=annotator_ckpts_path, subfolder='', use_symlinks=USE_SYMLINKS, repo_type="model"):
 
     # Local-only resolver: never downloads or contacts Hugging Face.

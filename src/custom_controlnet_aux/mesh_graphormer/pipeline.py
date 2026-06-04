@@ -30,7 +30,7 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from torchvision import transforms
 from pathlib import Path
-from custom_controlnet_aux.util import custom_hf_download
+from custom_controlnet_aux.util import custom_hf_download, resolve_local_hf_repo_path
 import custom_mesh_graphormer
 from comfy.model_management import soft_empty_cache
 from packaging import version
@@ -105,10 +105,12 @@ class MeshGraphormerMediapipe(Preprocessor):
             # init three transformer-encoder blocks in a loop
             for i in range(len(output_feat_dim)):
                 config_class, model_class = BertConfig, Graphormer
+                config_source = resolve_local_hf_repo_path(
+                    args.config_name if args.config_name else args.model_name_or_path
+                )
                 config = config_class.from_pretrained(
-                    args.config_name if args.config_name else args.model_name_or_path,
+                    config_source,
                     attn_implementation="eager",
-                    local_files_only=True,
                 )
 
                 config.output_attentions = False

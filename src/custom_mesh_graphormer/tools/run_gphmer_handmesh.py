@@ -25,6 +25,7 @@ from torchvision.utils import make_grid
 import gc
 import numpy as np
 import cv2
+from custom_controlnet_aux.util import resolve_local_hf_repo_path
 from custom_mesh_graphormer.modeling.bert import BertConfig, Graphormer
 from custom_mesh_graphormer.modeling.bert import Graphormer_Hand_Network as Graphormer_Network
 from custom_mesh_graphormer.modeling._mano import MANO, Mesh
@@ -629,9 +630,11 @@ def main(args):
         # init three transformer-encoder blocks in a loop
         for i in range(len(output_feat_dim)):
             config_class, model_class = BertConfig, Graphormer
+            config_source = resolve_local_hf_repo_path(
+                args.config_name if args.config_name else args.model_name_or_path
+            )
             config = config_class.from_pretrained(
-                args.config_name if args.config_name else args.model_name_or_path,
-                local_files_only=True,
+                config_source,
             )
 
             config.output_attentions = False

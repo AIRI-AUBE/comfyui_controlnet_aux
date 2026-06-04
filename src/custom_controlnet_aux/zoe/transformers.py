@@ -10,6 +10,8 @@ import torch
 from PIL import Image
 from transformers import AutoImageProcessor, ZoeDepthForDepthEstimation
 
+from custom_controlnet_aux.util import resolve_local_hf_repo_path
+
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
@@ -100,12 +102,13 @@ class ZoeDetector:
         """Initialize ZoeDepth with specified model."""
         self.model_name = model_name
         try:
-            self.processor = AutoImageProcessor.from_pretrained(model_name, local_files_only=True)
-            self.model = ZoeDepthForDepthEstimation.from_pretrained(model_name, local_files_only=True)
+            local_model_path = resolve_local_hf_repo_path(model_name)
+            self.processor = AutoImageProcessor.from_pretrained(local_model_path)
+            self.model = ZoeDepthForDepthEstimation.from_pretrained(local_model_path)
         except Exception as e:
             raise FileNotFoundError(
-                "ZoeDepth is configured for offline/local-only use. "
-                f"Transformers assets for '{model_name}' were not found locally. "
+                "ZoeDepth is configured for repo-local-only use. "
+                f"Transformers assets for '{model_name}' were not found under the repo ckpts layout. "
                 f"Original error: {type(e).__name__}: {e}"
             ) from e
         self.device = "cpu"
@@ -171,12 +174,13 @@ class ZoeDepthAnythingDetector:
         """Initialize ZoeDepthAnything detector."""
         self.model_name = model_name
         try:
-            self.processor = AutoImageProcessor.from_pretrained(model_name, local_files_only=True)
-            self.model = ZoeDepthForDepthEstimation.from_pretrained(model_name, local_files_only=True)
+            local_model_path = resolve_local_hf_repo_path(model_name)
+            self.processor = AutoImageProcessor.from_pretrained(local_model_path)
+            self.model = ZoeDepthForDepthEstimation.from_pretrained(local_model_path)
         except Exception as e:
             raise FileNotFoundError(
-                "ZoeDepthAnything is configured for offline/local-only use. "
-                f"Transformers assets for '{model_name}' were not found locally. "
+                "ZoeDepthAnything is configured for repo-local-only use. "
+                f"Transformers assets for '{model_name}' were not found under the repo ckpts layout. "
                 f"Original error: {type(e).__name__}: {e}"
             ) from e
         self.device = "cpu"

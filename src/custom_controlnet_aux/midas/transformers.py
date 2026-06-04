@@ -8,7 +8,7 @@ from PIL import Image
 from typing import Union
 
 # Import utilities
-from ..util import HWC3, common_input_validate, resize_image_with_pad
+from ..util import HWC3, common_input_validate, resize_image_with_pad, resolve_local_hf_repo_path
 
 
 class MidasDetector:
@@ -18,12 +18,13 @@ class MidasDetector:
         
         self.model_name = model_name
         try:
-            self.processor = DPTImageProcessor.from_pretrained(model_name, local_files_only=True)
-            self.model = DPTForDepthEstimation.from_pretrained(model_name, local_files_only=True)
+            local_model_path = resolve_local_hf_repo_path(model_name)
+            self.processor = DPTImageProcessor.from_pretrained(local_model_path)
+            self.model = DPTForDepthEstimation.from_pretrained(local_model_path)
         except Exception as e:
             raise FileNotFoundError(
-                "MiDaS is configured for offline/local-only use. "
-                f"Transformers assets for '{model_name}' were not found locally. "
+                "MiDaS is configured for repo-local-only use. "
+                f"Transformers assets for '{model_name}' were not found under the repo ckpts layout. "
                 f"Original error: {type(e).__name__}: {e}"
             ) from e
         self.device = "cpu"

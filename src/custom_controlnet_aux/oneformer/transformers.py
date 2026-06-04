@@ -9,7 +9,7 @@ import torch
 from PIL import Image
 
 # Import utilities
-from ..util import HWC3, common_input_validate, resize_image_with_pad, custom_hf_download, HF_MODEL_NAME
+from ..util import HWC3, common_input_validate, resize_image_with_pad, HF_MODEL_NAME, resolve_local_hf_repo_path
 
 
 # Ensure transformers never attempts to contact huggingface.co.
@@ -34,13 +34,14 @@ class OneformerSegmentor:
         
         self.model_name = model_name
         try:
-            self.processor = OneFormerProcessor.from_pretrained(model_name, local_files_only=True)
-            self.model = OneFormerForUniversalSegmentation.from_pretrained(model_name, local_files_only=True)
+            local_model_path = resolve_local_hf_repo_path(model_name)
+            self.processor = OneFormerProcessor.from_pretrained(local_model_path)
+            self.model = OneFormerForUniversalSegmentation.from_pretrained(local_model_path)
         except Exception as e:
             raise FileNotFoundError(
-                "OneFormer is configured for offline/local-only use. "
-                f"Transformers assets for '{model_name}' were not found in the local Hugging Face cache. "
-                "Pre-download the model (processor/config) into the cache or provide a local directory path instead of a Hub repo id. "
+                "OneFormer is configured for repo-local-only use. "
+                f"Transformers assets for '{model_name}' were not found under the repo ckpts layout. "
+                "Place the full model repository under ckpts or provide a local directory path. "
                 f"Original error: {type(e).__name__}: {e}"
             ) from e
         self.device = "cpu"
