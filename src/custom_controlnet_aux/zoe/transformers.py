@@ -10,7 +10,7 @@ import torch
 from PIL import Image
 from transformers import AutoImageProcessor, ZoeDepthForDepthEstimation
 
-from custom_controlnet_aux.util import resolve_local_hf_repo_path
+from custom_controlnet_aux.util import resolve_local_hf_repo_path, validate_local_transformers_repo
 
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
@@ -103,6 +103,12 @@ class ZoeDetector:
         self.model_name = model_name
         try:
             local_model_path = resolve_local_hf_repo_path(model_name)
+            validate_local_transformers_repo(
+                local_model_path,
+                required_files=["config.json", "preprocessor_config.json"],
+                weight_files=["model.safetensors", "pytorch_model.bin"],
+                repo_label=model_name,
+            )
             self.processor = AutoImageProcessor.from_pretrained(local_model_path)
             self.model = ZoeDepthForDepthEstimation.from_pretrained(local_model_path)
         except Exception as e:
@@ -175,6 +181,12 @@ class ZoeDepthAnythingDetector:
         self.model_name = model_name
         try:
             local_model_path = resolve_local_hf_repo_path(model_name)
+            validate_local_transformers_repo(
+                local_model_path,
+                required_files=["config.json", "preprocessor_config.json"],
+                weight_files=["model.safetensors", "pytorch_model.bin"],
+                repo_label=model_name,
+            )
             self.processor = AutoImageProcessor.from_pretrained(local_model_path)
             self.model = ZoeDepthForDepthEstimation.from_pretrained(local_model_path)
         except Exception as e:

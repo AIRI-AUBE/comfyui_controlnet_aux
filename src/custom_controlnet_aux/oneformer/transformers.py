@@ -10,7 +10,7 @@ import torch
 from PIL import Image
 
 # Import utilities
-from ..util import HWC3, common_input_validate, resize_image_with_pad, HF_MODEL_NAME, resolve_local_hf_repo_path
+from ..util import HWC3, common_input_validate, resize_image_with_pad, HF_MODEL_NAME, resolve_local_hf_repo_path, validate_local_transformers_repo
 
 
 # Ensure transformers never attempts to contact huggingface.co.
@@ -20,26 +20,19 @@ os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 
 
 def _validate_local_oneformer_assets(local_model_path):
-    required_files = [
-        "config.json",
-        "preprocessor_config.json",
-        "tokenizer_config.json",
-        "special_tokens_map.json",
-        "vocab.json",
-        "merges.txt",
-    ]
-    optional_weight_files = ["model.safetensors", "pytorch_model.bin"]
-
-    model_path = Path(local_model_path)
-    missing_files = [name for name in required_files if not model_path.joinpath(name).exists()]
-    if not any(model_path.joinpath(name).exists() for name in optional_weight_files):
-        missing_files.append("model.safetensors or pytorch_model.bin")
-
-    if missing_files:
-        raise FileNotFoundError(
-            "OneFormer local model repository is incomplete. "
-            f"Missing files under {local_model_path}: {', '.join(missing_files)}"
-        )
+    validate_local_transformers_repo(
+        local_model_path,
+        required_files=[
+            "config.json",
+            "preprocessor_config.json",
+            "tokenizer_config.json",
+            "special_tokens_map.json",
+            "vocab.json",
+            "merges.txt",
+        ],
+        weight_files=["model.safetensors", "pytorch_model.bin"],
+        repo_label=local_model_path,
+    )
 
 
 class OneformerSegmentor:

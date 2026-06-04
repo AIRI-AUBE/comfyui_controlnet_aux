@@ -310,6 +310,35 @@ def resolve_local_hf_repo_path(pretrained_model_or_path, ckpts_dir=annotator_ckp
     print(f"local_repo_path is {resolved_path_str}")
     return resolved_path_str
 
+
+def validate_local_transformers_repo(local_model_path, required_files=None, weight_files=None, repo_label=None):
+    """Validate that a local transformers repository contains required files."""
+
+    model_path = Path(local_model_path)
+    required_files = required_files or []
+    weight_files = weight_files or []
+    repo_label = repo_label or local_model_path
+
+    missing_files = [name for name in required_files if not model_path.joinpath(name).exists()]
+    if weight_files and not any(model_path.joinpath(name).exists() for name in weight_files):
+        missing_files.append(" or ".join(weight_files))
+
+    if missing_files:
+        raise FileNotFoundError(
+            f"Local model repository for '{repo_label}' is incomplete under {local_model_path}. "
+            f"Missing files: {', '.join(missing_files)}"
+        )
+
+
+def validate_local_config_repo(local_model_path, repo_label=None):
+    """Validate that a local config directory contains config.json."""
+
+    validate_local_transformers_repo(
+        local_model_path,
+        required_files=["config.json"],
+        repo_label=repo_label,
+    )
+
 def custom_hf_download(pretrained_model_or_path, filename, cache_dir=temp_dir, ckpts_dir=annotator_ckpts_path, subfolder='', use_symlinks=USE_SYMLINKS, repo_type="model"):
 
     # Local-only resolver: never downloads or contacts Hugging Face.

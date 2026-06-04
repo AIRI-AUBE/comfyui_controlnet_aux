@@ -8,7 +8,7 @@ from PIL import Image
 from typing import Union
 
 # Import utilities
-from ..util import HWC3, common_input_validate, resize_image_with_pad, resolve_local_hf_repo_path
+from ..util import HWC3, common_input_validate, resize_image_with_pad, resolve_local_hf_repo_path, validate_local_transformers_repo
 
 
 class MidasDetector:
@@ -19,6 +19,12 @@ class MidasDetector:
         self.model_name = model_name
         try:
             local_model_path = resolve_local_hf_repo_path(model_name)
+            validate_local_transformers_repo(
+                local_model_path,
+                required_files=["config.json", "preprocessor_config.json"],
+                weight_files=["model.safetensors", "pytorch_model.bin"],
+                repo_label=model_name,
+            )
             self.processor = DPTImageProcessor.from_pretrained(local_model_path)
             self.model = DPTForDepthEstimation.from_pretrained(local_model_path)
         except Exception as e:

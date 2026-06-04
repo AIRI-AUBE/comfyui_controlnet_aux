@@ -34,6 +34,7 @@ from custom_mesh_graphormer.modeling.hrnet.config import config as hrnet_config
 from custom_mesh_graphormer.modeling.hrnet.config import update_config as hrnet_update_config
 import custom_mesh_graphormer.modeling.data.config as cfg
 from custom_mesh_graphormer.datasets.build import make_hand_data_loader
+from custom_controlnet_aux.util import resolve_local_hf_repo_path, validate_local_config_repo
 
 from custom_mesh_graphormer.utils.logger import setup_logger
 from custom_mesh_graphormer.utils.comm import synchronize, is_main_process, get_rank, get_world_size, all_gather
@@ -243,6 +244,10 @@ def main(args):
             config_class, model_class = BertConfig, Graphormer
             config_source = resolve_local_hf_repo_path(
                 args.config_name if args.config_name else args.model_name_or_path
+            )
+            validate_local_config_repo(
+                config_source,
+                repo_label=args.config_name if args.config_name else args.model_name_or_path,
             )
             config = config_class.from_pretrained(
                 config_source,
