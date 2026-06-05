@@ -62,6 +62,7 @@ class UrlAsset:
 HF_FILE_ASSETS: tuple[HfFileAsset, ...] = (
     HfFileAsset("bdsqlsz/qinglong_controlnet-lllite", "Annotators/UNet.pth"),
     HfFileAsset("bdsqlsz/qinglong_controlnet-lllite", "Annotators/7_model.pth"),
+    HfFileAsset("TheMistoAI/MistoLine", "Anyline/MTEED.pth"),
     HfFileAsset("skytnt/anime-seg", "isnetis.ckpt"),
     HfFileAsset("LayerNorm/DensePose-TorchScript-with-hint-image", "densepose_r50_fpn_dl.torchscript"),
     HfFileAsset("depth-anything/Depth-Anything-V2-Small", "depth_anything_v2_vits.pth"),
