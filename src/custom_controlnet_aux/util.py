@@ -33,14 +33,20 @@ DEPTH_ANYTHING_V2_MODEL_NAME_DICT = {
 }
 
 temp_dir = tempfile.gettempdir()
-annotator_ckpts_path = os.path.join(Path(__file__).parents[2], 'ckpts')
 USE_SYMLINKS = False
 
+def _default_annotator_ckpts_path():
+    try:
+        import folder_paths
+        return str(Path(folder_paths.models_dir).joinpath("controlnet_aux"))
+    except Exception:
+        return os.path.join(Path(__file__).parents[2], 'ckpts')
+
 try:
-    annotator_ckpts_path = os.environ['AUX_ANNOTATOR_CKPTS_PATH']
-except:
-    warnings.warn("Custom pressesor model path not set successfully.")
-    pass
+    annotator_ckpts_path = os.environ.get('AUX_ANNOTATOR_CKPTS_PATH', _default_annotator_ckpts_path())
+except Exception:
+    annotator_ckpts_path = _default_annotator_ckpts_path()
+    warnings.warn("Custom preprocessor model path not set successfully.")
 
 try:
     USE_SYMLINKS = literal_eval(os.environ['AUX_USE_SYMLINKS'])
@@ -347,7 +353,7 @@ def custom_hf_download(pretrained_model_or_path, filename, cache_dir=temp_dir, c
     model_path = Path(local_dir).joinpath(*subfolder.split('/'), filename)
 
     if len(str(model_path)) >= 255:
-        warnings.warn(f"Path {model_path} is too long, \n please change annotator_ckpts_path in config.yaml")
+        warnings.warn(f"Path {model_path} is too long, \n please set AUX_ANNOTATOR_CKPTS_PATH to a shorter directory")
 
     if not model_path.exists():
         raise FileNotFoundError(

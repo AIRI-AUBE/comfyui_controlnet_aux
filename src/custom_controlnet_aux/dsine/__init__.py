@@ -1,7 +1,4 @@
-import os
-import types
 import warnings
-from pathlib import Path
 
 import cv2
 import numpy as np
@@ -10,13 +7,9 @@ import torchvision.transforms as transforms
 from einops import rearrange
 from PIL import Image
 
-from custom_controlnet_aux.util import custom_hf_download
-
+from custom_controlnet_aux.util import custom_hf_download, DIFFUSION_EDGE_MODEL_NAME
 from .models.dsine_arch import DSINE
 from .utils.utils import get_intrins_from_fov
-
-# Local constants
-DIFFUSION_EDGE_MODEL_NAME = "hr16/Diffusion-Edge"
 
 # Local utility functions
 def HWC3(x):
@@ -94,8 +87,6 @@ def common_input_validate(input_image, output_type, **kwargs):
         output_type = output_type or "np"
     
     return (input_image, output_type)
-
-
 
 # load model
 def load_checkpoint(fpath, model):
@@ -203,4 +194,3 @@ class DsineDetector:
             detected_map = Image.fromarray(detected_map)
             
         return detected_map
-    

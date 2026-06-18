@@ -3,7 +3,6 @@ import sys
 import torch
 import torch.nn as nn
 from  torch.nn import  functional as F
-
 from custom_controlnet_aux.util import custom_torch_download
 
 

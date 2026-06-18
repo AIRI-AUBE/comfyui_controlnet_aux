@@ -10,18 +10,20 @@ import subprocess
 import threading
 import comfy
 import tempfile
+import folder_paths
 
 here = Path(__file__).parent.resolve()
+DEFAULT_ORT_PROVIDERS = ["CUDAExecutionProvider", "DirectMLExecutionProvider", "OpenVINOExecutionProvider", "ROCMExecutionProvider", "CPUExecutionProvider", "CoreMLExecutionProvider"]
+default_annotator_ckpts_path = str(Path(folder_paths.models_dir).joinpath("controlnet_aux"))
 
 config_path = Path(here, "config.yaml")
 
 if os.path.exists(config_path):
-    config = yaml.load(open(config_path, "r"), Loader=yaml.FullLoader)
+    config = yaml.load(open(config_path, "r"), Loader=yaml.FullLoader) or {}
 
-    annotator_ckpts_path = str(Path(here, config["annotator_ckpts_path"]))
-    TEMP_DIR = config["custom_temp_path"]
-    USE_SYMLINKS = config["USE_SYMLINKS"]
-    ORT_PROVIDERS = config["EP_list"]
+    TEMP_DIR = config.get("custom_temp_path")
+    USE_SYMLINKS = config.get("USE_SYMLINKS", False)
+    ORT_PROVIDERS = config.get("EP_list", DEFAULT_ORT_PROVIDERS)
 
     if USE_SYMLINKS is None or type(USE_SYMLINKS) != bool:
         log.error("USE_SYMLINKS must be a boolean. Using False by default.")
@@ -36,19 +38,24 @@ if os.path.exists(config_path):
             log.error("Failed to create custom temp directory. Using default.")
             TEMP_DIR = tempfile.gettempdir()
 
-    if not os.path.isdir(annotator_ckpts_path):
-        try:
-            os.makedirs(annotator_ckpts_path)
-        except:
-            log.error("Failed to create config ckpts directory. Using default.")
-            annotator_ckpts_path = str(Path(here, "./ckpts"))
 else:
-    annotator_ckpts_path = str(Path(here, "./ckpts"))
     TEMP_DIR = tempfile.gettempdir()
     USE_SYMLINKS = False
-    ORT_PROVIDERS = ["CUDAExecutionProvider", "DirectMLExecutionProvider", "OpenVINOExecutionProvider", "ROCMExecutionProvider", "CPUExecutionProvider", "CoreMLExecutionProvider"]
+    ORT_PROVIDERS = DEFAULT_ORT_PROVIDERS
 
-os.environ['AUX_ANNOTATOR_CKPTS_PATH'] = os.getenv('AUX_ANNOTATOR_CKPTS_PATH', annotator_ckpts_path)
+annotator_ckpts_path = os.getenv('AUX_ANNOTATOR_CKPTS_PATH', default_annotator_ckpts_path)
+if not os.path.isdir(annotator_ckpts_path):
+    try:
+        os.makedirs(annotator_ckpts_path, exist_ok=True)
+    except:
+        log.error("Failed to create annotator ckpts directory. Using default.")
+        annotator_ckpts_path = default_annotator_ckpts_path
+        try:
+            os.makedirs(annotator_ckpts_path, exist_ok=True)
+        except:
+            log.error("Failed to create default annotator ckpts directory.")
+
+os.environ['AUX_ANNOTATOR_CKPTS_PATH'] = annotator_ckpts_path
 os.environ['AUX_TEMP_DIR'] = os.getenv('AUX_TEMP_DIR', str(TEMP_DIR))
 os.environ['AUX_USE_SYMLINKS'] = os.getenv('AUX_USE_SYMLINKS', str(USE_SYMLINKS))
 os.environ['AUX_ORT_PROVIDERS'] = os.getenv('AUX_ORT_PROVIDERS', str(",".join(ORT_PROVIDERS)))

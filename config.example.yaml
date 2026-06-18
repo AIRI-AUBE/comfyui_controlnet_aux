@@ -1,8 +1,7 @@
 # this is an example for config.yaml file, you can rename it to config.yaml if you want to use it
 # ###############################################################################################
-# This path is for custom pressesor models base folder. default is "./ckpts"
-# you can also use absolute paths like: "/root/ComfyUI/custom_nodes/comfyui_controlnet_aux/ckpts" or "D:\\ComfyUI\\custom_nodes\\comfyui_controlnet_aux\\ckpts"
-annotator_ckpts_path: "./ckpts"
+# ControlNet Aux models are stored in ComfyUI/models/controlnet_aux by default.
+# Set AUX_ANNOTATOR_CKPTS_PATH before launching ComfyUI if you need a custom model directory.
 # ###############################################################################################
 # This path is for downloading temporary files.
 # You SHOULD use absolute path for this like"D:\\temp", DO NOT use relative paths. Empty for default.
